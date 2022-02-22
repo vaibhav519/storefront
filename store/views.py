@@ -1,36 +1,34 @@
-from itertools import product
-import re
 from django.db.models.aggregates import Count
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from rest_framework import serializers
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from .filters import ProductFilter
 from .models import Product, Collection, Review
 from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer
 
 
 class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
 
-    def get_queryset(self):
-        queryset = Product.objects.all()
-        collection_id = self.request.query_params.get("collection_id")
-        if collection_id is not None:
-            queryset = queryset.filter(collection_id=collection_id)
-        return queryset
-
+    search_fields = ['title', 'description']
+    ordering_fields = ['unit_price', 'last_update']
+ 
     def get_serializer_context(self):
         return {'request': self.request}
 
-    def destroy(self, request, *args, **kwargs):
-        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
-            return Response({'error': 'Product cannot ne deleted because it associated with order items'})
-        return super().destroy(request, *args, **kwargs)
+    def delete(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        if product.orderitems.count() > 0:
+            return Response({'error': 'Product cannot be deleted because it is associated with an order item.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CollectionViewSet(ModelViewSet):
@@ -38,10 +36,12 @@ class CollectionViewSet(ModelViewSet):
         products_count=Count('products')).all()
     serializer_class = CollectionSerializer
 
-    def destroy(self, request, *args, **kwargs):
-        if OrderItem.objects.filter(collection_id=kwargs['pk']).count() > 0:
+    def delete(self, request, pk):
+        collection = get_object_or_404(Collection, pk=pk)
+        if collection.products.count() > 0:
             return Response({'error': 'Collection cannot be deleted because it includes one or more products.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().destroy(request, *args, **kwargs)
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewViewSet(ModelViewSet):
