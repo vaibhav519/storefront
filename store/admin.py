@@ -4,7 +4,9 @@ from django.db.models.query import QuerySet
 from django.utils.html import format_html, urlencode
 from django.urls import reverse
 from . import models
+from .models import CartItem
 
+admin.site.register(CartItem)
 
 class InventoryFilter(admin.SimpleListFilter):
     title = 'inventory'
