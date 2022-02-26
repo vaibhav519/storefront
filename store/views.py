@@ -1,15 +1,16 @@
+from select import select
 from django.db.models.aggregates import Count
 from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.mixins import CreateModelMixin
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from .filters import ProductFilter
-from .models import Cart, Product, Collection, Review
-from .serializers import CartSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer
+from .models import Cart, CartItem, Product, Collection, Review
+from .serializers import CartItemSerializer, CartSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer
 
 
 class ProductViewSet(ModelViewSet):
@@ -55,7 +56,13 @@ class ReviewViewSet(ModelViewSet):
         return {'product_id': self.kwargs['products_pk']}
 
 
-class CartViewSet(CreateModelMixin, GenericViewSet):
+class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
     Queryset = Cart.objects.prefetch_related('items__products').all()
     serializer_class = CartSerializer
-    
+
+
+class CartItemViewSet(ModelViewSet):
+    serializer_class = CartItemSerializer
+
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs['card_pk']).select_related('product')
