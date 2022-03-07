@@ -6,7 +6,6 @@ from django.urls import reverse
 from . import models
 from .models import CartItem
 
-admin.site.register(CartItem)
 
 class InventoryFilter(admin.SimpleListFilter):
     title = 'inventory'
