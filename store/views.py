@@ -80,4 +80,4 @@ class CartItemViewSet(ModelViewSet):
 
 class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
+    serializer_class = CustomerSerializer  
