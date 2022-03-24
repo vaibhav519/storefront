@@ -1,4 +1,5 @@
 from cgitb import lookup
+from multiprocessing.managers import BaseManager
 from posixpath import basename
 from django.urls import path
 from . import views
@@ -9,6 +10,7 @@ router.register('products', views.ProductViewSet, basename='products')
 router.register('collections', views.CollectionViewSet)
 router.register('carts', views.CartViewSet, basename='cart')
 router.register('customers', views.CustomerViewSet)
+router.register('orders', views.OrderViewSet, basename='orders')
 
 products_router = routers.NestedDefaultRouter(
     router, 'products', lookup='product')
