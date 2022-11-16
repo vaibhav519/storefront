@@ -1,4 +1,4 @@
 # storefront
-An e-commerce API build with Django REST framework
+An e-commerce web API build with Django REST framework
 
 ![](storefront.png)
